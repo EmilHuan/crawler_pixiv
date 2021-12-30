@@ -1,0 +1,14 @@
+# 忽略特定目錄
+.vscode/
+json_file/
+pixiv_img/
+
+# 忽略 json 檔、txt 檔
+*.json
+*.txt
+
+# 忽略 chromedriver
+chromedriver.exe
+
+# 忽略 python 小測試檔
+test.py
