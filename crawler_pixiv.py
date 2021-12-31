@@ -40,6 +40,7 @@ driver = webdriver.Chrome(options = options)
 #url = "https://www.pixiv.net/users/16481931/artworks"  # 先用「ろあ₍˄·͈༝·͈˄₎」首頁測試
 #url = "https://www.pixiv.net/users/2924751/artworks" # 先用「Kaitan」首頁測試
 url = "https://www.pixiv.net/users/33638616" # 用「周憂」測試跳過動圖
+#url = "https://www.pixiv.net/users/1867047/artworks" # 用「Genyaky」測試 20 張圖
 
 # 放置爬取的資料
 listData = []
@@ -130,8 +131,6 @@ def img_url_name():
                     "img_use_url":imgSrc_useful,
                     "img_origin_url":imgSrc
                 })
-            
-                print("圖片資料已加入")
 
             # 如果有按鈕 (button 不為空串列)，使用處理多張圖片的方式
             else:
@@ -199,8 +198,6 @@ def img_url_name():
                         "img_use_url":listMulti_imgSrc_useful,
                         "img_origin_url":listMulti_imgSrc
                     })
-
-                    print("圖片資料已加入")
                 
                 # 圖片總數 > 2，捲動網頁 
                 else:
@@ -267,9 +264,8 @@ def img_url_name():
                         "img_use_url":listMulti_imgSrc_useful,
                         "img_origin_url":listMulti_imgSrc
                     })
-                
-                    print("圖片資料已加入")
-
+        
+            print("圖片資料已加入")
 
 ## 將 list 存成 json
 def savejson():
@@ -302,34 +298,60 @@ def download_img():
     # print(listResult)
     # print("=" * 50)
 
-    # 建立儲存圖片、影片的資料夾
+    # 建立儲存圖片、影片的資料夾 (已存在就不建立)
     folderPath = "pixiv_img"
     if not os.path.exists(folderPath):
         os.makedirs(folderPath)
     
     # 批次下載圖檔、重新命名
     for i, dictObj in enumerate(listResult):
-        # 取得副檔名 (透過正規表達式從網址取得)
-        extension = re.search(r".jp?g|.png", dictObj["img_use_url"])[0]       
-        # 用數字作為 os 下載檔名 (os curl 檔名遇到某些日文、簡中會變 "_"，目前不知道原因)
-        oldFileName = str(i) + extension
-        
-        # 下載檔案 (注意 "" 一定要在裡面，不然無法下載)
-        os.system('curl "{}" -o ./{}/{}'.format(dictObj["img_use_url"], folderPath, oldFileName))
+        ## 先判斷字典中的圖片是否有多張
+        # 如 img_number == 1，代表這個字典只有一張圖片
+        if dictObj["img_number"] == 1:
+            # 取得副檔名 (透過正規表達式從網址取得)
+            extension = re.search(r".jp?g|.png", dictObj["img_use_url"])[0]       
+            # 用數字作為 os 下載檔名 (os curl 檔名遇到某些日文、簡中會變 "_"，目前不知道原因)
+            oldFileName = str(i) + extension
+            
+            # 下載檔案 (注意 "" 一定要在裡面，不然無法下載)
+            os.system('curl "{}" -o ./{}/{}'.format(dictObj["img_use_url"], folderPath, oldFileName))
 
-        # 將作者、圖片名稱取出來作為正式檔名 (後綴加上副檔名)
-        newFileName = dictObj["author"] + "_" + dictObj["img_name"] + extension
-        # 將 os 下載檔名重新命名為正式檔名
-        oldName = os.path.join("./", folderPath, oldFileName)
-        newName = os.path.join("./", folderPath, newFileName)
-        os.rename(oldName, newName)
+            # 將作者、圖片名稱、解析度取出來作為正式檔名 (後綴加上副檔名)
+            newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "_" + dictObj["img_resolution"]  + extension
+            # 將 os 下載檔名重新命名為正式檔名
+            oldName = os.path.join("./", folderPath, oldFileName)
+            newName = os.path.join("./", folderPath, newFileName)
+            os.rename(oldName, newName)
 
-        # 印出訊息
-        print("檔案名稱: {}".format(newFileName))
-        print("下載連結: {}".format(dictObj["img_use_url"]))
-        print()
- 
+            # 印出訊息
+            print("檔案名稱: {}".format(newFileName))
+            print("下載連結: {}".format(dictObj["img_use_url"]))
+            print()
         
+        # 如 img_number 不是 1，代表這個字典至少有 2 張圖片，使用巢狀迴圈下載
+        else:
+            for j, listObj in enumerate(dictObj["img_use_url"]):
+                # 取得副檔名 (透過正規表達式從網址取得)
+                extension = re.search(r".jp?g|.png", listObj)[0]       
+                # 用數字作為 os 下載檔名 (os curl 檔名遇到某些日文、簡中會變 "_"，目前不知道原因)
+                oldFileName = str(j) + extension
+
+                # 下載檔案 (注意 "" 一定要在裡面，不然無法下載)
+                os.system('curl "{}" -o ./{}/{}'.format(listObj, folderPath, oldFileName))
+
+                # 將作者、圖片名稱取出來作為正式檔名，圖名後面加上「第幾張圖片」數字，最後接圖片解析度 (後綴加上副檔名)
+                newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "-"+ str(j + 1) + "_" + dictObj["img_resolution"][j]  + extension
+                # 將 os 下載檔名重新命名為正式檔名
+                oldName = os.path.join("./", folderPath, oldFileName)
+                newName = os.path.join("./", folderPath, newFileName)
+                os.rename(oldName, newName)
+
+                # 印出訊息
+                print("檔案名稱: {}".format(newFileName))
+                print("下載連結: {}".format(listObj))
+                print()
+
+
 
 
 if __name__ == '__main__':
@@ -337,7 +359,6 @@ if __name__ == '__main__':
     get_url()
     img_url_name()
     savejson()
-    # download_img()
-
+    download_img()
 
 
