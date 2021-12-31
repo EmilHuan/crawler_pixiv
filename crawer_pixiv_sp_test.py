@@ -104,7 +104,7 @@ def img_url_name():
             img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]       
         
             listData.append({
-                "url":url,
+                "web_url":url,
                 "author":drawer_name,
                 "img_name":img_name,
                 "img_number":img_number,
@@ -174,7 +174,7 @@ def img_url_name():
                     listMulti_imgResolution.append(img_resolution)
 
                 listData.append({
-                    "url":url,
+                    "web_url":url,
                     "author":drawer_name,
                     "img_name":img_name,
                     "img_number":img_number,
@@ -246,7 +246,7 @@ def img_url_name():
                     listMulti_imgResolution.append(img_resolution)
 
                 listData.append({
-                    "url":url,
+                    "web_url":url,
                     "author":drawer_name,
                     "img_name":img_name,
                     "img_number":img_number,

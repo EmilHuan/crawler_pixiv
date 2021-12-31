@@ -38,7 +38,8 @@ driver = webdriver.Chrome(options = options)
 #url = 'https://www.pixiv.net/users/39495939/bookmarks/artworks' # 我的收藏主頁
 #url = "https://www.pixiv.net/users/13313480/artworks" # 先用「K&P」首頁測試
 #url = "https://www.pixiv.net/users/16481931/artworks"  # 先用「ろあ₍˄·͈༝·͈˄₎」首頁測試
-url = "https://www.pixiv.net/users/2924751/artworks" # 先用「Kaitan」首頁測試
+#url = "https://www.pixiv.net/users/2924751/artworks" # 先用「Kaitan」首頁測試
+url = "https://www.pixiv.net/users/33638616" # 用「周憂」測試跳過動圖
 
 # 放置爬取的資料
 listData = []
@@ -52,6 +53,8 @@ def visit():
     # 前往指定連結
     driver.get(url)
 
+    sleep(3)
+
 
 ## 取得 pixi 主頁每個格子的 url
 def get_url():
@@ -61,17 +64,15 @@ def get_url():
     # 逐一檢視元素
     for index, a in enumerate(a_elms):
         # 設定要幾張圖片
-        if index >= 2:
+        if index >= 6:
             break
         # 取得圖片連結
         aLink = a.get_attribute("href")
         print("取得網址: {}".format(aLink))
+        print("=" * 50)
 
         # 放資料到 list 中
         listLink.append(aLink)
-    
-    print(listLink)
-    print("="*50)
 
 
 ## 取得圖片 url、圖片名稱和作者名稱
@@ -82,51 +83,192 @@ def img_url_name():
     
         sleep(2)
 
-        # 取得圖片網址
-        imgSrc = driver.find_element(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img").get_attribute("src")
-        # 將圖片網址存到 list
-        #listSrc.append(imgSrc)
+        ## 先測試有網頁無動圖 CSS (為了跳過動圖)
+        img_css = driver.find_elements(By.CSS_SELECTOR, "div.sc-tu09d3-1.inGOuX canvas")
+        # 如有代表本連結為動圖，跳過此連結
+        if img_css != []:
+            print("動圖跳過")
+            pass
+        # 如果有，依照爬圖片流程執行
+        else:
+            # 儲存圖片數量的變數 (預設 1 張圖片)
+            img_number = 1
 
-        # 將圖片網址改為可直接使用的網址，並存到 list (直接用原始網址會顯示 403 error，無法連上圖片)
-        #imgSrc_useful.append(imgSrc.replace("i.pximg.net", "i.pixiv.cat"))
-        imgSrc_useful = imgSrc.replace("i.pximg.net", "i.pixiv.cat")
-    
-        # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
-        drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
-        # 將圖片作者名字存到 list
-        #listDrawer_name.append(drawer_name)
-   
-        # 取得圖片名稱
-        img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
-        # 將圖片名稱存到 list
-        #listImg_name.append(img_name)
+            # 使用 find_elements 將「右上角數字」的元素傳回 list，如果該網頁沒有此元素 (只有一張圖)，會回傳空串列
+            right_number = driver.find_elements(By.CSS_SELECTOR, 'div.sc-zjgqkv-1.cykQFD span')
+        
+            ## 依據網址有無「右上角數字」元素，做不同操作
+            # 如果沒有按鈕 (button 為空串列)，使用原本處理一張圖片的方式
+            if right_number == []:
+                # 取得圖片網址
+                imgSrc = driver.find_element(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img").get_attribute("src")
 
-        # # 取得圖片解析度 (寬, width) # 網頁解析度為動態，無法抓到下載圖片的解析度
-        # img_width = driver.find_element(By.CSS_SELECTOR, "img.sc-1qpw8k9-1.jOmqKq").get_attribute("alt")
+                # 將圖片網址改為可直接使用的網址，並存到 list (直接用原始網址會顯示 403 error，無法連上圖片)
+                #imgSrc_useful.append(imgSrc.replace("i.pximg.net", "i.pixiv.cat"))
+                imgSrc_useful = imgSrc.replace("i.pximg.net", "i.pixiv.cat")
 
-        # # 取得圖片解析度 (高, height) # 網頁解析度為動態，無法抓到下載圖片的解析度
-        # img_height = driver.find_element(By.CSS_SELECTOR, "img.sc-1qpw8k9-1.jOmqKq").get_attribute("height")
+                # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
+                drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
 
-        # 跳轉到圖片網址 (為了獲取圖片網址標題)
-        driver.get(imgSrc_useful)
-        # 擷取圖片網址 title 文字 (為了獲取原始圖片解析度)
-        web_page_title = driver.title
+                # 取得圖片名稱
+                img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
 
-        # 取得圖片解析度字串 (透過正規表達式從 title 取得)
-        img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]       
-    
-        listData.append({
-            "url":link,
-            "author":drawer_name,
-            "img_name":img_name,
-            # "img_res_width":img_width,
-            # "img_res_height":img_height,
-            "img_resolution":img_resolution,
-            "img_use_url":imgSrc_useful,
-            "img_origin_url":imgSrc
-        })
+                # 跳轉到圖片網址 (為了獲取圖片網址標題)
+                driver.get(imgSrc_useful)
+                # 擷取圖片網址 title 文字 (為了獲取原始圖片解析度)
+                web_page_title = driver.title
 
-    print(listData)
+                # 取得圖片解析度字串 (透過正規表達式從 title 取得)
+                img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]       
+            
+                listData.append({
+                    "web_url":url,
+                    "author":drawer_name,
+                    "img_name":img_name,
+                    "img_number":img_number,
+                    "img_resolution":img_resolution,
+                    "img_use_url":imgSrc_useful,
+                    "img_origin_url":imgSrc
+                })
+            
+                print("圖片資料已加入")
+
+            # 如果有按鈕 (button 不為空串列)，使用處理多張圖片的方式
+            else:
+                # 取得右上角圖片數字 (e.g. 1/9，代表總共 9 張圖片)
+                right_number = driver.find_element(By.CSS_SELECTOR, 'div.sc-zjgqkv-1.cykQFD span').text
+                # 透過正規表達式取得斜線後面的數字 (注意：此為字串型態)
+                right_number_str = re.search(r"\/([0-9]+)", right_number)[1]
+                # 將取得的數字轉換為整數型態，存到 img_number
+                img_number = int(right_number_str)
+
+                # 點擊「查看全部」按鈕，讓網頁顯示出全部圖片
+                driver.find_element(By.CSS_SELECTOR, 'button[type="button"] div.sc-emr523-2.wEKy').click()
+
+                # 等待網頁加載
+                sleep(2)
+
+                # 放置每張圖片的原始網址
+                listMulti_imgSrc = []
+                # 放置每張圖片的有效網址
+                listMulti_imgSrc_useful = []
+                # 放置每張圖片的解析度字串
+                listMulti_imgResolution = []
+
+                ## 判斷圖片是否大於 2 張 (2 張以不捲動視窗，大於 2 張捲動視窗)
+                if img_number == 2:
+                    # 取得所有圖片的網址所在位置的元素 (find_elements)
+                    imgSrc_elms = driver.find_elements(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img")
+
+                    # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
+                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
+
+                    # 取得圖片名稱
+                    img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
+
+                    # 取得全部圖片網址
+                    for img in imgSrc_elms:
+                        # 取得元素中的連結網址
+                        imgLink = img.get_attribute("src")
+                        # 將每張圖片的原始網址放進 listMulti_imgSrc 中
+                        listMulti_imgSrc.append(imgLink)
+
+                        # 將圖片超連結替換為有效的格式
+                        imgLink_useful = imgLink.replace("i.pximg.net", "i.pixiv.cat")
+                        # 將每張圖片的有效網址放進 listMulti_imgSrc_useful 中
+                        listMulti_imgSrc_useful.append(imgLink_useful)
+                    
+                    # 取得每張圖片的解析度字串
+                    for i in listMulti_imgSrc_useful:           
+                        # 跳轉到圖片網址 (為了獲取圖片網址標題)
+                        driver.get(i)
+
+                        # 擷取圖片網址 title 文字 (為了獲取原始圖片解析度)
+                        web_page_title = driver.title
+                        # 取得圖片解析度字串 (透過正規表達式從 title 取得)
+                        img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]    
+                        # 將解析度字串放進 listMulti_imgResolution 中
+                        listMulti_imgResolution.append(img_resolution)
+
+                    listData.append({
+                        "web_url":url,
+                        "author":drawer_name,
+                        "img_name":img_name,
+                        "img_number":img_number,
+                        "img_resolution":listMulti_imgResolution,
+                        "img_use_url":listMulti_imgSrc_useful,
+                        "img_origin_url":listMulti_imgSrc
+                    })
+
+                    print("圖片資料已加入")
+                
+                # 圖片總數 > 2，捲動網頁 
+                else:
+                    ## 捲動網頁
+                    # 取得每次移動的高度 (使用 js 語法，取得瀏覽器從頭到尾的高度)
+                    offset = driver.execute_script(
+                        "return window.document.documentElement.scrollHeight;"
+                    )
+
+                    # 捲動的 js code
+                    # f'' 中，由於嵌入資訊為 {offset}，外側的大括號要寫成 {{}} (跳脫字元)，才不會被視為嵌入資訊  
+                    js_code = f'''
+                        window.scrollTo({{
+                            top: {offset},
+                            behavior: "smooth"
+                        }});
+                    '''
+
+                    # 執行 js code (捲動頁面)
+                    driver.execute_script(js_code)
+
+                    # 強制等待，讓網頁元素有時間生成
+                    sleep(3)
+
+                    # 取得所有圖片的網址所在位置的元素 (find_elements)
+                    imgSrc_elms = driver.find_elements(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img")
+
+                    # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
+                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
+
+                    # 取得圖片名稱
+                    img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
+
+                    # 取得全部圖片網址
+                    for img in imgSrc_elms:
+                        # 取得元素中的連結網址
+                        imgLink = img.get_attribute("src")
+                        # 將每張圖片的原始網址放進 listMulti_imgSrc 中
+                        listMulti_imgSrc.append(imgLink)
+
+                        # 將圖片超連結替換為有效的格式
+                        imgLink_useful = imgLink.replace("i.pximg.net", "i.pixiv.cat")
+                        # 將每張圖片的有效網址放進 listMulti_imgSrc_useful 中
+                        listMulti_imgSrc_useful.append(imgLink_useful)
+                    
+                    # 取得每張圖片的解析度字串
+                    for i in listMulti_imgSrc_useful:           
+                        # 跳轉到圖片網址 (為了獲取圖片網址標題)
+                        driver.get(i)
+
+                        # 擷取圖片網址 title 文字 (為了獲取原始圖片解析度)
+                        web_page_title = driver.title
+                        # 取得圖片解析度字串 (透過正規表達式從 title 取得)
+                        img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]    
+                        # 將解析度字串放進 listMulti_imgResolution 中
+                        listMulti_imgResolution.append(img_resolution)
+
+                    listData.append({
+                        "web_url":url,
+                        "author":drawer_name,
+                        "img_name":img_name,
+                        "img_number":img_number,
+                        "img_resolution":listMulti_imgResolution,
+                        "img_use_url":listMulti_imgSrc_useful,
+                        "img_origin_url":listMulti_imgSrc
+                    })
+                
+                    print("圖片資料已加入")
 
 
 ## 將 list 存成 json
@@ -134,6 +276,7 @@ def savejson():
     pixiv_json = open("pixiv_img.json", "w", encoding = "utf-8")
     pixiv_json.write(json.dumps(listData, ensure_ascii=False))
     pixiv_json.close()
+    print("=" * 50)
     print("已儲存為 json 檔案")
 
     # 存成排版 json (查閱用，空 4 格，網頁形式)
@@ -193,7 +336,8 @@ if __name__ == '__main__':
     visit()
     get_url()
     img_url_name()
-    # savejson()
+    savejson()
     # download_img()
+
 
 
