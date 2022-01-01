@@ -109,7 +109,7 @@ def img_url_name():
                 imgSrc_useful = imgSrc.replace("i.pximg.net", "i.pixiv.cat")
 
                 # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
-                drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
+                drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs > div").text
 
                 # 取得圖片名稱
                 img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
@@ -142,7 +142,7 @@ def img_url_name():
                 img_number = int(right_number_str)
 
                 # 點擊「查看全部」按鈕，讓網頁顯示出全部圖片
-                driver.find_element(By.CSS_SELECTOR, 'button[type="button"] div.sc-emr523-2.wEKy').click()
+                driver.find_element(By.CSS_SELECTOR, 'button[type="button"] div.sc-emr523-2').click()
 
                 # 等待網頁加載
                 sleep(2)
@@ -160,7 +160,7 @@ def img_url_name():
                     imgSrc_elms = driver.find_elements(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img")
 
                     # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
-                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
+                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs > div").text
 
                     # 取得圖片名稱
                     img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
@@ -226,7 +226,7 @@ def img_url_name():
                     imgSrc_elms = driver.find_elements(By.CSS_SELECTOR, "div.sc-1qpw8k9-3.eFhoug img")
 
                     # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
-                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs.eEzOcr > div").text
+                    drawer_name = driver.find_element(By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs > div").text
 
                     # 取得圖片名稱
                     img_name = driver.find_element(By.CSS_SELECTOR, "figcaption.sc-1yvhotl-4.eStCAU h1").text
