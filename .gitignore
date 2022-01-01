@@ -2,6 +2,7 @@
 .vscode/
 json_file/
 pixiv_img/
+pixiv_img_login/
 
 # 忽略 json 檔、txt 檔
 *.json
