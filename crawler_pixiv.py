@@ -135,7 +135,8 @@ def img_url_name():
                 img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]       
             
                 listData.append({
-                    "web_url":url,
+                    "main_web_url":url,
+                    "img_web_url":link,
                     "author":drawer_name,
                     "img_name":img_name,
                     "img_number":img_number,
@@ -202,7 +203,8 @@ def img_url_name():
                         listMulti_imgResolution.append(img_resolution)
 
                     listData.append({
-                        "web_url":url,
+                        "main_web_url":url,
+                        "img_web_url":link,
                         "author":drawer_name,
                         "img_name":img_name,
                         "img_number":img_number,
@@ -268,7 +270,8 @@ def img_url_name():
                         listMulti_imgResolution.append(img_resolution)
 
                     listData.append({
-                        "web_url":url,
+                        "main_web_url":url,
+                        "img_web_url":link,
                         "author":drawer_name,
                         "img_name":img_name,
                         "img_number":img_number,
@@ -331,14 +334,19 @@ def download_img():
         if dictObj["img_number"] == 1:
             # 取得副檔名 (透過正規表達式從網址取得)
             extension = re.search(r".jp?g|.png", dictObj["img_use_url"])[0]       
+            
+            # 取得 pixiv 網頁後 8 碼，便於之後找圖片 pixiv 網頁
+            pixiv_8code = re.search(r"[a-zA-Z]+\/([0-9]+)", dictObj["img_web_url"])[1]
+
             # 用數字作為 os 下載檔名 (os curl 檔名遇到某些日文、簡中會變 "_"，目前不知道原因)
             oldFileName = str(i) + extension
+
             
             # 下載檔案 (注意 "" 一定要在裡面，不然無法下載)
             os.system('curl "{}" -o ./{}/{}'.format(dictObj["img_use_url"], folderPath, oldFileName))
 
-            # 將作者、圖片名稱、解析度取出來作為正式檔名 (後綴加上副檔名)
-            newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "_" + dictObj["img_resolution"]  + extension
+            # 將作者、圖片名稱、解析度、pixiv 網頁後 8 碼取出來作為正式檔名 (後綴加上副檔名)
+            newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "_" + dictObj["img_resolution"]  +  "_" + pixiv_8code + extension
             # 將 os 下載檔名重新命名為正式檔名
             oldName = os.path.join("./", folderPath, oldFileName)
             newName = os.path.join("./", folderPath, newFileName)
@@ -357,14 +365,18 @@ def download_img():
             for j, listObj in enumerate(dictObj["img_use_url"]):
                 # 取得副檔名 (透過正規表達式從網址取得)
                 extension = re.search(r".jp?g|.png", listObj)[0]       
+                
+                # 取得 pixiv 神秘數字 (網頁最後 8 碼，便於之後找圖片 pixiv 網頁)
+                pixiv_8code = re.search(r"[a-zA-Z]+\/([0-9]+)", dictObj["img_web_url"])[1]
+
                 # 用數字作為 os 下載檔名 (os curl 檔名遇到某些日文、簡中會變 "_"，目前不知道原因)
                 oldFileName = str(j) + extension
 
                 # 下載檔案 (注意 "" 一定要在裡面，不然無法下載)
                 os.system('curl "{}" -o ./{}/{}'.format(listObj, folderPath, oldFileName))
 
-                # 將作者、圖片名稱取出來作為正式檔名，圖名後面加上「第幾張圖片」數字，最後接圖片解析度 (後綴加上副檔名)
-                newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "-"+ str(j + 1) + "_" + dictObj["img_resolution"][j]  + extension
+                # 將作者、圖片名稱 (圖名後面加上「第幾張圖片」數字)、圖片解析度、 pixiv 網頁後 8 碼取出來作為正式檔名 (後綴加上副檔名)
+                newFileName = dictObj["author"] + "_" + dictObj["img_name"] + "-"+ str(j + 1) + "_" + dictObj["img_resolution"][j]  + "_" + pixiv_8code + extension
                 # 將 os 下載檔名重新命名為正式檔名
                 oldName = os.path.join("./", folderPath, oldFileName)
                 newName = os.path.join("./", folderPath, newFileName)
