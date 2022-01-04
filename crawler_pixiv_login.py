@@ -109,19 +109,31 @@ def get_url():
     # 逐一檢視元素
     for index, a in enumerate(a_elms):
         # 設定要幾張圖片
-        if index >= 38:
+        if index >= 2:
             break
         # 取得圖片連結
         aLink = a.get_attribute("href")
-        print("取得網址: {}".format(aLink))
 
         # 放資料到 list 中
         listLink.append(aLink)
+    # 印出總共取得幾個網址
+    print("=" * 50)
+    print("共取得 {} 個網址".format(len(listLink)))
 
 
 ## 取得圖片 url、圖片名稱和作者名稱
 def img_url_name():
+    # 計數經過幾個網頁 (印出資訊用)
+    count = 0
+    # 計算動圖跳過次數
+    count_pass = 0
+    # 計算圖片總張數
+    img_sum = 0
+
     for link in listLink:
+        # 每迴圈一次，count + 1
+        count += 1
+        
         # 跳轉每張圖片的網址
         driver.get(link)
     
@@ -132,6 +144,7 @@ def img_url_name():
         # 如有代表本連結為動圖，跳過此連結
         if img_css != []:
             print("動圖跳過")
+            count_pass += 1
             pass
 
         # 如果有，依照爬圖片流程執行
@@ -262,8 +275,15 @@ def img_url_name():
                     "img_use_url":listMulti_imgSrc_useful,
                     "img_origin_url":listMulti_imgSrc
                 })
-        
-            print("圖片資料已加入")
+
+            # 累加目前圖片總數    
+            img_sum += img_number 
+            
+            # 印出處理到第幾個網頁，該網頁共給張圖
+            print("第 {} 個網頁共 {} 張圖片，已加入資料".format(count, img_number))
+
+    print("總計：")
+    print("共 {} 個網頁 ({} 圖片、{} 動圖)，總共 {} 張圖片".format(count, count - count_pass, count_pass, img_sum))
 
 
 ## 將 list 存成 json
@@ -294,14 +314,16 @@ def download_img():
 
     # 將 json 轉成 list (裡面是 dict 集合)
     listResult = json.loads(strJson)
-    # print(listResult)
-    # print("=" * 50)
+
 
     # 建立儲存圖片、影片的資料夾 (已存在就不建立)
     folderPath = "pixiv_img_login"
     if not os.path.exists(folderPath):
         os.makedirs(folderPath)
     
+    # 存放下載總張數
+    count_download = 0
+
     # 批次下載圖檔、重新命名
     for i, dictObj in enumerate(listResult):
         ## 先判斷字典中的圖片是否有多張
@@ -321,6 +343,9 @@ def download_img():
             oldName = os.path.join("./", folderPath, oldFileName)
             newName = os.path.join("./", folderPath, newFileName)
             os.rename(oldName, newName)
+
+            # 只有一張，下載總數 + 1
+            count_download += 1
 
             # 印出訊息
             print("檔案名稱: {}".format(newFileName))
@@ -349,8 +374,14 @@ def download_img():
                 print("檔案名稱: {}".format(newFileName))
                 print("下載連結: {}".format(listObj))
                 print()
+
+            # 累加多張圖片的數量
+            count_download += (j + 1)
+    
+    print("下載總計：")
+    print("共下載 {} 張圖片 (來源網頁數： {})".format(count_download, (i + 1)))
  
-        
+     
 
 
 if __name__ == '__main__':
@@ -360,5 +391,4 @@ if __name__ == '__main__':
     img_url_name()
     savejson()
     download_img()
-
 
