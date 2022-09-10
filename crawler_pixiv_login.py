@@ -1,6 +1,8 @@
 # 匯入套件
 # 操作 browser 的 API
 from selenium import webdriver
+# 處理 find_element 抓不到元素例外
+from selenium.common.exceptions import NoSuchElementException
 # 處理逾時例外的工具
 from selenium.common.exceptions import TimeoutException
 # 面對動態網頁，等待某個元素出現的工具，通常與 exptected_conditions 搭配
@@ -47,14 +49,28 @@ driver = webdriver.Chrome(options=options)
 # 我的收藏 (公開 -> 未分類)
 url = "https://www.pixiv.net/users/39495939/bookmarks/artworks/%E6%9C%AA%E5%88%86%E9%A1%9E"
 
+# 確保連結不會有中文亂碼
+url = parse.unquote(url)
+
 # 放置爬取的資料
 listData = []
 
 # 放置 pixiv 主頁每個格子裡面的超連結
 listLink = []
 
-# 確保連結不會有中文亂碼
-url = parse.unquote(url)
+
+# 檢查 css selector 元素是否存在
+def element_check(css_selector_string, false_string):
+    try:
+        # 如存在，回傳 driver.find_element
+        driver_element = driver.find_element(
+            By.CSS_SELECTOR, css_selector_string)
+        return driver_element
+
+    except NoSuchElementException:
+        # 不存在，顯示自訂錯誤訊息，回傳 False
+        print(false_string)
+        return False
 
 
 # 匯入帳密檔後，登入 pixiv 帳號
@@ -94,6 +110,10 @@ def login_pixiv():
         driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
         # 強制等待
         sleep(3)
+
+    except NoSuchElementException:
+        print("登入頁面找不到元素，程式終止")
+        return False
 
     except TimeoutException:
         print("等待逾時，即將關閉瀏覽器")
@@ -421,9 +441,11 @@ def download_img():
 
 
 if __name__ == '__main__':
-    login_pixiv()
-    visit()
-    get_url()
-    img_url_name()
-    savejson()
-    download_img()
+    if login_pixiv() == False:
+        pass
+    else:
+        visit()
+        get_url()
+        img_url_name()
+        savejson()
+        download_img()
