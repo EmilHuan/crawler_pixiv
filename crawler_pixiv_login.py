@@ -23,6 +23,8 @@ import os
 import hashlib
 # 引入 regular expression (正規表達式) 工具
 import re
+# 引入時間套件
+import datetime
 
 # 主程式碼：pixiv 爬蟲「登入」版本 (登入後 CSS 有變，無法通用)
 # 設定 "啟動瀏覽器工具" 及其選項
@@ -334,25 +336,34 @@ def img_url_name():
 
 # 將 list 存成 json
 def savejson():
-    # 存成不排版 json (資料用，無空格)
-    pixiv_json = open("pixiv_img_login.json", "w", encoding="utf-8")
+    # 取得儲存檔案時間 (格式：YYYY.MM.DD_HH.MM.SS)
+    savejson_time = datetime.datetime.now().strftime("%Y.%m.%d_%H.%M.%S")
+
+   # 存成不排版 json (資料用，無空格)
+    # json 檔案名稱 (加上當前時間)
+    json_file_name = "pixiv_img_login_" + savejson_time + ".json"
+    pixiv_json = open(json_file_name, "w", encoding="utf-8")
     pixiv_json.write(json.dumps(listData, ensure_ascii=False))
     pixiv_json.close()
     print("已儲存為 json 檔案")
 
     # 存成排版 json (查閱用，空 4 格，網頁形式)
-    pixiv_json_indent = open(
-        "pixiv_img_login_indent.json", "w", encoding="utf-8")
+    # json 空 4 格檔案名稱 (加上當前時間)
+    json_indent_file_name = "pixiv_img_login_indent_" + savejson_time + ".json"
+    pixiv_json_indent = open(json_indent_file_name, "w", encoding="utf-8")
     pixiv_json_indent.write(json.dumps(listData, ensure_ascii=False, indent=4))
     pixiv_json_indent.close()
     print("已儲存為空 4 格 json 檔案")
     print("=" * 50)
 
+    # 回傳 json 檔案名稱 (下載圖片讀取檔案用)
+    return json_file_name
+
 
 # 下載圖片
-def download_img():
-    # 開啟 json 檔案
-    fp = open("pixiv_img_login.json", "r", encoding="utf-8")
+def download_img(file_name):
+    # 開啟 json 檔案 (從 function savejson 取得)
+    fp = open(file_name, "r", encoding="utf-8")
     # 取得 json 字串
     strJson = fp.read()
 
@@ -450,5 +461,8 @@ if __name__ == '__main__':
         visit()
         get_url()
         img_url_name()
-        savejson()
-        download_img()
+
+        # 儲存 json 檔案
+        file_name = savejson()
+        # 讀取 json 檔案內容，下載圖片
+        download_img(file_name)
