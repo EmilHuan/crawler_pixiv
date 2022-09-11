@@ -31,6 +31,8 @@ options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")  # 最大化視窗
 options.add_argument("--incognito")  # 啟用無痕模式
 options.add_argument("--disable-popup-blocking")  # 禁用彈出視窗
+options.add_experimental_option("excludeSwitches", [
+                                'enable-automation', 'enable-logging'])  # 忽略 usb 報錯 (chromedriver 的 bug，暫時只能用忽略解決)
 
 # 指定 chromedriver 檔案的路徑 (目前指定在 py 檔這層目錄)
 executable_path = './chromedriver.exe'
@@ -116,9 +118,9 @@ def login_pixiv():
         return False
 
     except TimeoutException:
-        print("等待逾時，即將關閉瀏覽器")
+        print("等待逾時")
         sleep(3)
-        driver.quit()
+        # driver.quit()
 
 
 # 走訪頁面
@@ -133,12 +135,12 @@ def get_url():
     sleep(3)
     # 取得主要元素的集合
     a_elms = driver.find_elements(
-        By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-rp5asc-16.iUsZyY.sc-bdnxRM.fGjAxR")
+        By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-rp5asc-16")
 
     # 逐一檢視元素
     for index, a in enumerate(a_elms):
         # 設定要幾張圖片
-        if index >= 2:
+        if index >= 3:
             break
         # 取得圖片連結
         aLink = a.get_attribute("href")
@@ -170,7 +172,7 @@ def img_url_name():
 
         # 先測試有網頁無動圖 CSS (為了跳過動圖)
         img_css = driver.find_elements(
-            By.CSS_SELECTOR, "div.sc-tu09d3-1.inGOuX canvas")
+            By.CSS_SELECTOR, "div.sc-tu09d3-1")
         # 如有代表本連結為動圖，跳過此連結
         if img_css != []:
             print("動圖跳過")
@@ -184,14 +186,14 @@ def img_url_name():
 
             # 使用 find_elements 將「右上角數字」的元素傳回 list，如果該網頁沒有此元素 (只有一張圖)，會回傳空串列
             right_number = driver.find_elements(
-                By.CSS_SELECTOR, 'div.sc-zjgqkv-1.cykQFD span')
+                By.CSS_SELECTOR, "div.sc-zjgqkv-1.cykQFD span")
 
             # 依據網址有無「右上角數字」元素，做不同操作
             # 如果沒有按鈕 (button 為空串列)，使用原本處理一張圖片的方式
             if right_number == []:
                 # 取得圖片網址
                 imgSrc = driver.find_element(
-                    By.CSS_SELECTOR, "div.sc-1qpw8k9-0.gTFqQV a").get_attribute("href")
+                    By.CSS_SELECTOR, "div.sc-1qpw8k9-0 a").get_attribute("href")
 
                 # 將圖片網址改為可直接使用的網址，並存到 list (直接用原始網址會顯示 403 error，無法連上圖片)
                 #imgSrc_useful.append(imgSrc.replace("i.pximg.net", "i.pixiv.cat"))
@@ -199,7 +201,7 @@ def img_url_name():
 
                 # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
                 drawer_name = driver.find_element(
-                    By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs > div").text
+                    By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-10gpz4q-6 > div").text
 
                 # 取得圖片名稱
                 img_name = driver.find_element(
@@ -228,7 +230,7 @@ def img_url_name():
             else:
                 # 取得右上角圖片數字 (e.g. 1/9，代表總共 9 張圖片)
                 right_number = driver.find_element(
-                    By.CSS_SELECTOR, 'div.sc-zjgqkv-1.cykQFD span').text
+                    By.CSS_SELECTOR, "div.sc-zjgqkv-1.cykQFD span").text
                 # 透過正規表達式取得斜線後面的數字 (注意：此為字串型態)
                 right_number_str = re.search(r"\/([0-9]+)", right_number)[1]
                 # 將取得的數字轉換為整數型態，存到 img_number
@@ -276,7 +278,7 @@ def img_url_name():
 
                 # 取得圖片作者名字 (後綴加入 "> div"，避免擷取到「接搞中」文字)
                 drawer_name = driver.find_element(
-                    By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-fujyAs > div").text
+                    By.CSS_SELECTOR, "a.sc-d98f2c-0.sc-10gpz4q-6 > div").text
 
                 # 取得圖片名稱
                 img_name = driver.find_element(
@@ -441,6 +443,7 @@ def download_img():
 
 
 if __name__ == '__main__':
+    # 如登入頁面找不到元素，印出錯誤訊息並停止後續步驟
     if login_pixiv() == False:
         pass
     else:
