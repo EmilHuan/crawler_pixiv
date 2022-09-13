@@ -217,6 +217,9 @@ def img_url_name():
                 # 取得圖片解析度字串 (透過正規表達式從 title 取得)
                 img_resolution = re.search(r"[0-9]+×[0-9]+", web_page_title)[0]
 
+                # 取得當前時間，紀錄至 listData (python json 不支援儲存日期格式，轉換為字串儲存)
+                record_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
                 listData.append({
                     "main_web_url": url,
                     "img_web_url": link,
@@ -225,7 +228,8 @@ def img_url_name():
                     "img_number": img_number,
                     "img_resolution": img_resolution,
                     "img_use_url": imgSrc_useful,
-                    "img_origin_url": imgSrc
+                    "img_origin_url": imgSrc,
+                    "record_time": record_time
                 })
 
             # 如果有按鈕 (button 不為空串列)，使用處理多張圖片的方式
@@ -312,6 +316,9 @@ def img_url_name():
                     # 將解析度字串放進 listMulti_imgResolution 中
                     listMulti_imgResolution.append(img_resolution)
 
+                # 取得當前時間，紀錄至 listData (python json 不支援儲存日期格式，轉換為字串儲存)
+                record_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
                 listData.append({
                     "main_web_url": url,
                     "img_web_url": link,
@@ -320,7 +327,8 @@ def img_url_name():
                     "img_number": img_number,
                     "img_resolution": listMulti_imgResolution,
                     "img_use_url": listMulti_imgSrc_useful,
-                    "img_origin_url": listMulti_imgSrc
+                    "img_origin_url": listMulti_imgSrc,
+                    "record_time": record_time
                 })
 
             # 累加目前圖片總數
